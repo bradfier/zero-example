@@ -1,8 +1,8 @@
 #include <zmq.hpp>
+#include <msgpack.hpp>
 #include <string>
 #include <iostream>
 #include <unistd.h>
-
 
 int main () {
     //  Prepare our context and socket
@@ -15,15 +15,25 @@ int main () {
 
         //  Wait for next request from client
         socket.recv (&request);
-        std::cout << "Received Hello" << std::endl;
+        std::cout << "Received message from client." << std::endl;
 
-        //  Do some 'work'
-        sleep(1);
+		// Get a reference to the encoded data
+		msgpack::object_handle oh =
+		  msgpack::unpack((const char*)request.data(), request.size());
+		msgpack::object deserialized = oh.get();
 
-        //  Send reply back to client
-        zmq::message_t reply (5);
-        memcpy (reply.data (), "World", 5);
-        socket.send (reply);
+		// For now, just print the whole data packet to stdout
+		std::cout << deserialized << std::endl;
+
+        //  Send reply back to the client
+		msgpack::type::tuple<std::string> src("Replying!");
+		std::stringstream buffer;
+		msgpack::pack(buffer, src);
+
+		std::string output = buffer.str();
+		zmq::message_t reply(output.size());
+        memcpy(reply.data(), output.data(), output.size());
+        socket.send(reply);
     }
     return 0;
 }
