@@ -26,7 +26,7 @@ int main () {
 	std::cout << deserialized << std::endl;
 
 	//  Send reply back to the client
-	msgpack::type::tuple<std::string> src("Replying!");
+	std::string src("Replying!");
 	std::stringstream buffer;
 	msgpack::pack(buffer, src);
 
